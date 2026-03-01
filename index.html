@@ -163,7 +163,7 @@
             <button id="reveal-link-btn" onclick="revealLink()">Rivela Link PayPal</button>
             
             <div id="hidden-link-section" style="display: none; margin-top: 15px;">
-                <input type="text" id="paypal-link-text" value="INSERISCI_QUI_IL_TUO_LINK_PAYPAL" readonly onclick="copyLink()" title="Clicca per copiare">
+                <input type="text" id="paypal-link-text" value="https://paypal.me/XHysenji" readonly onclick="copyLink()" title="Clicca per copiare">
                 <p style="font-size: 0.9em; color: #00ff00; height: 20px; margin: 5px 0;" id="copy-feedback"></p>
                 
                 <button onclick="confirmManualPayment()" style="background: #28a745; border-color: #28a745; color: white; margin-top: 10px;">Ho completato il trasferimento - Inizializza Sistema</button>
@@ -356,7 +356,7 @@
                 "> Bypass firewall e apertura porte di comunicazione...",
                 "> Caricamento hash crittografici nel motore...",
                 "> Allocazione risorse di calcolo...",
-                "> Inizializzazione algoritmi in corso...", // Modifica richiesta
+                "> Inizializzazione algoritmi in corso...", 
                 "> Preparazione ambiente visivo completata."
             ];
 
@@ -370,7 +370,6 @@
                     clearInterval(logInterval);
                     output.innerHTML += "<br><span style='color: #00ffff;'>> TRASFERIMENTO SEGNALE ALL'INTERFACCIA GRAFICA...</span><br>";
                     
-                    // Dopo 2 secondi, chiude il terminale e apre la schermata delle barre
                     setTimeout(() => { 
                         overlay.style.display = 'none'; 
                         startAlgorithmActivationBars(packIndex);
@@ -389,10 +388,8 @@
             container.innerHTML = '';
             closeBtn.style.display = 'none';
 
-            // Recupera gli algoritmi specifici scelti dall'utente
             const algorithmsToActivate = packagesData[packIndex];
 
-            // Crea l'HTML per ogni barra
             algorithmsToActivate.forEach((algo, index) => {
                 container.innerHTML += `
                     <div class="algo-bar-wrapper">
@@ -404,7 +401,6 @@
                 `;
             });
 
-            // Avvia le animazioni con tempi leggermente casuali per simulare il caricamento
             let maxDuration = 0;
 
             setTimeout(() => {
@@ -412,24 +408,20 @@
                     const fill = document.getElementById(`fill-${index}`);
                     const status = document.getElementById(`status-${index}`);
                     
-                    // Durata casuale tra i 2 e i 6 secondi
                     const duration = Math.random() * 4000 + 2000; 
                     if (duration > maxDuration) maxDuration = duration;
 
                     fill.style.transition = `width ${duration}ms ease-in-out`;
                     
-                    // Forza il reflow per applicare l'animazione css
                     void fill.offsetWidth;
                     fill.style.width = '100%';
 
-                    // Quando la barra finisce, aggiorna il testo
                     setTimeout(() => {
                         status.innerText = 'ATTIVO';
                         status.style.color = '#00ff00';
                     }, duration);
                 });
 
-                // Mostra il pulsante di chiusura solo quando l'ultima barra ha finito
                 setTimeout(() => {
                     closeBtn.style.display = 'block';
                 }, maxDuration + 500);
