@@ -78,17 +78,17 @@
             border: 1px dashed #00ffff; text-align: center; margin-top: 20px;
         }
         
-        /* Stile Prezzo Dinamico e Crypto Wallet */
+        /* Stile Prezzo Dinamico e Link PayPal */
         #calculated-price {
             font-size: 1.8em; color: #ff00ff; text-shadow: 0 0 10px #ff00ff;
             margin: 15px 0;
         }
-        #crypto-wallet-text {
+        #paypal-link-text {
             text-align: center; color: #00ffff; border-color: #00ffff;
             cursor: copy; font-family: monospace; font-size: 1.1em;
             background: rgba(0, 255, 255, 0.1); margin-top: 10px;
         }
-        #crypto-wallet-text:hover { background: rgba(0, 255, 255, 0.2); }
+        #paypal-link-text:hover { background: rgba(0, 255, 255, 0.2); }
     </style>
 </head>
 <body>
@@ -140,16 +140,16 @@
 
         <div class="manual-payment-box">
             <h3>Acquisizione e Avvio Macinazione</h3>
-            <p style="font-size:0.8em; color:#aaa;">*Trasferimento fondi tramite protocollo decentralizzato (Blockchain).*</p>
+            <p style="font-size:0.8em; color:#aaa;">*Trasferimento fondi tramite protocollo sicuro P2P.*</p>
             
             <div id="calculated-price">Importo richiesto: € 120</div>
             
-            <p>Indirizzo Wallet per finalizzare l'acquisto dei pacchetti (invia l'equivalente in USDT/USDC o Crypto supportata):</p>
+            <p>Link PayPal per finalizzare l'acquisto dei pacchetti scelti:</p>
             
-            <button id="reveal-wallet-btn" onclick="revealWallet()">Rivela Indirizzo Wallet</button>
+            <button id="reveal-link-btn" onclick="revealLink()">Rivela Link PayPal</button>
             
-            <div id="hidden-wallet-section" style="display: none; margin-top: 15px;">
-                <input type="text" id="crypto-wallet-text" value="INSERISCI_QUI_IL_TUO_INDIRIZZO_WALLET_CRYPTO" readonly onclick="copyWallet()" title="Clicca per copiare">
+            <div id="hidden-link-section" style="display: none; margin-top: 15px;">
+                <input type="text" id="paypal-link-text" value="INSERISCI_QUI_IL_TUO_LINK_PAYPAL" readonly onclick="copyLink()" title="Clicca per copiare">
                 <p style="font-size: 0.9em; color: #00ff00; height: 20px; margin: 5px 0;" id="copy-feedback"></p>
                 
                 <button onclick="confirmManualPayment()" style="background: #28a745; border-color: #28a745; color: white; margin-top: 10px;">Ho completato il trasferimento - Avvia Terminale</button>
@@ -244,7 +244,7 @@
         }
         createPackages();
 
-        // --- 3. Logica Prezzario Dinamico Aggiornato ---
+        // --- 3. Logica Prezzario Dinamico ---
         const priceMap = {
             "20 Gb": 120,
             "122 Gb": 170,
@@ -308,19 +308,19 @@
             });
         }
 
-        // --- 5. Logica Copia Wallet Crypto e Avvio Terminale ---
-        function revealWallet() {
-            document.getElementById('reveal-wallet-btn').style.display = 'none';
-            document.getElementById('hidden-wallet-section').style.display = 'block';
+        // --- 5. Logica Copia Link PayPal e Avvio Terminale ---
+        function revealLink() {
+            document.getElementById('reveal-link-btn').style.display = 'none';
+            document.getElementById('hidden-link-section').style.display = 'block';
         }
 
-        function copyWallet() {
-            const walletInput = document.getElementById('crypto-wallet-text');
-            walletInput.select();
-            walletInput.setSelectionRange(0, 99999); 
+        function copyLink() {
+            const linkInput = document.getElementById('paypal-link-text');
+            linkInput.select();
+            linkInput.setSelectionRange(0, 99999); 
             
-            navigator.clipboard.writeText(walletInput.value).then(() => {
-                document.getElementById('copy-feedback').innerText = "Indirizzo Wallet copiato negli appunti!";
+            navigator.clipboard.writeText(linkInput.value).then(() => {
+                document.getElementById('copy-feedback').innerText = "Link copiato negli appunti!";
                 setTimeout(() => { document.getElementById('copy-feedback').innerText = ""; }, 3000);
             }).catch(err => {
                 document.getElementById('copy-feedback').innerText = "Errore nella copia. Seleziona il testo manualmente.";
@@ -341,10 +341,10 @@
             output.innerHTML = ''; 
 
             const logs = [
-                `> Inizializzazione protocollo blockchain per l'utente: ${payerName}...`,
+                `> Inizializzazione protocollo PayPal per l'utente: ${payerName}...`,
                 `> Acquisizione pacchetto dati: ${volume}... OK`,
-                "> Verificando transazione on-chain...",
-                "> Hash di transazione confermato. Cluster di calcolo centrale innescato.",
+                "> Verificando transazione P2P...",
+                "> Trasferimento confermato. Cluster di calcolo centrale innescato.",
                 "> Bypass firewall nodo di rete completato.",
                 "> Caricamento 72 Algoritmi nel motore di esecuzione...",
                 "> Macinazione in corso: 14%...",
