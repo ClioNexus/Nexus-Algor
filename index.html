@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shazam Algor - Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #0d0d1a; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; overflow-x: hidden; }
+        header { text-align: center; margin-bottom: 30px; }
+        h1 { font-family: 'Papyrus', fantasy; font-size: 4em; color: #00ffff; text-shadow: 2px 2px 8px #800080; margin: 0; }
+        #canvas-container { width: 100%; height: 400px; display: flex; justify-content: center; margin-bottom: 40px; }
+        .form-section, .dashboard-section { background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 10px; max-width: 900px; margin: 0 auto 30px auto; border: 1px solid #800080; }
+        input, select, button { width: 100%; padding: 10px; margin: 10px 0; background: #1a1a2e; color: #00ffff; border: 1px solid #00ffff; border-radius: 5px; box-sizing: border-box; }
+        button { background: #800080; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #00ffff; color: #000; box-shadow: 0 0 10px #00ffff; }
+        .packages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .algo-pack { background: #16213e; padding: 15px; border-left: 4px solid #00ffff; font-size: 0.85em; cursor: pointer; transition: 0.2s; }
+        .algo-pack:hover { background: #1f2d50; }
+        #charts-display { display: none; margin-top: 30px; padding: 20px; background: rgba(0, 0, 0, 0.4); border: 1px dashed #00ffff; }
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; max-height: 600px; overflow-y: auto; padding: 10px; }
+        .chart-card { background: #1a1a2e; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #2a2a4a; }
+        .chart-card h5 { margin: 0 0 10px 0; color: #ff00ff; word-break: break-all; font-size: 0.7em;}
+        .chart-card canvas { will-change: transform; margin: 0 auto; }
+        #terminal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 1000; justify-content: center; align-items: center; }
+        #terminal-window { width: 80%; height: 70%; background: #000; border: 2px solid #00ff00; border-radius: 5px; padding: 20px; box-shadow: 0 0 20px #00ff00; font-family: 'Courier New', monospace; color: #00ff00; overflow-y: auto; font-size: 1.1em; line-height: 1.5; }
+        .blinking-cursor { animation: blink 1s step-end infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+        #progress-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(13, 13, 26, 0.98); z-index: 1001; flex-direction: column; align-items: center; padding: 40px 20px; box-sizing: border-box; overflow-y: auto; }
+        #progress-overlay h2 { color: #ff00ff; text-shadow: 0 0 10px #ff00ff; margin-bottom: 30px; text-align: center; }
+        .progress-container { width: 100%; max-width: 800px; }
+        .algo-bar-wrapper { margin-bottom: 15px; }
+        .algo-bar-label { color: #00ffff; font-family: monospace; font-size: 0.9em; margin-bottom: 5px; }
+        .algo-bar-bg { width: 100%; background: #1a1a2e; border: 1px solid #800080; height: 12px; border-radius: 6px; overflow: hidden; }
+        .algo-bar-fill { height: 100%; background: linear-gradient(90deg, #800080, #00ffff); width: 0%; border-radius: 6px; }
+        .status-text { color: #aaa; float: right; font-weight: bold; }
+        .manual-payment-box { background: rgba(0, 255, 255, 0.05); padding: 20px; border-radius: 8px; border: 1px dashed #00ffff; text-align: center; margin-top: 20px; }
+        #calculated-price { font-size: 1.8em; color: #ff00ff; text-shadow: 0 0 10px #ff00ff; margin: 15px 0; }
+        #paypal-link-text { text-align: center; color: #00ffff; border-color: #00ffff; cursor: copy; font-family: monospace; font-size: 1.1em; background: rgba(0, 255, 255, 0.1); margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <header><h1>Shazam Algor</h1></header>
+    <div id="canvas-container"></div>
+
+    <div class="form-section" id="registration-form">
+        <h2>Inizializzazione Account</h2>
+        <input type="text" id="wallet-input" placeholder="Codice alfanumerico Wallet criptato" required>
+        <input type="text" id="channel-input" placeholder="Canale di proiezione" required>
+        <input type="text" id="network-input" placeholder="Network ID" required>
+        <input type="text" id="username-input" placeholder="Username ID (Nome e Cognome)" required>
+        <input type="password" id="password-input" placeholder="Password di accesso" required>
+        <button onclick="unlockDashboard()">Verifica e Accedi</button>
+    </div>
+
+    <div class="dashboard-section" id="investment-dashboard" style="display: none;">
+        <h2>Pannello di Controllo Algoritmico</h2>
+        <label>Seleziona Volume Dati (Task):</label>
+        <select id="data-volume" onchange="updatePrice()">
+            <option value="20 Gb">20 Gb</option><option value="122 Gb">122 Gb</option><option value="3 Tb">3 Tb</option>
+            <option value="63 Tb">63 Tb</option><option value="12 Petabyte">12 Petabyte</option><option value="52 Petabyte">52 Petabyte</option><option value="284 Petabyte">284 Petabyte</option>
+        </select>
+        <label>Frequenza di calcolo:</label>
+        <select><option>Continua (24/7)</option><option>Intermittente (12 ore)</option><option>High-Frequency Trading</option></select>
+        <h3>Pacchetti Algoritmi</h3>
+        <div class="packages-grid" id="algo-container"></div>
+        <div id="charts-display"><h3 id="charts-title">Analisi Mercati</h3><div class="charts-grid" id="charts-grid"></div></div>
+
+        <div class="manual-payment-box">
+            <h3>Acquisizione e Avvio Algoritmi</h3>
+            <p style="font-size:0.8em; color:#aaa;">*Trasferimento fondi tramite protocollo sicuro P2P.*</p>
+            <div id="calculated-price">Importo richiesto: € 120</div>
+            <p>Link PayPal per finalizzare l'acquisto:</p>
+            <button id="reveal-link-btn" onclick="revealLink()">Rivela Link PayPal</button>
+            <div id="hidden-link-section" style="display: none; margin-top: 15px;">
+                <input type="text" id="paypal-link-text" value="https://paypal.me/XHysenji" readonly onclick="copyLink()" title="Clicca per copiare">
+                <p style="font-size: 0.9em; color: #00ff00; height: 20px; margin: 5px 0;" id="copy-feedback"></p>
+                <button onclick="confirmManualPayment()" style="background: #28a745; border-color: #28a745; color: white;">Ho completato il trasferimento - Inizializza Sistema</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="terminal-overlay"><div id="terminal-window"><div id="terminal-output"></div><span class="blinking-cursor">_</span></div></div>
+    <div id="progress-overlay"><h2>Monitoraggio Attivazione Algoritmi</h2><div class="progress-container" id="progress-bars-container"></div></div>
+
+    <script>
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(75, container.clientWidth / 400, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true }); renderer.setSize(container.clientWidth, 400); container.appendChild(renderer.domElement);
+        const geometry = new THREE.BufferGeometry(); const particlesCount = 20000; const posArray = new Float32Array(particlesCount * 3); const colorArray = new Float32Array(particlesCount * 3);
+        for(let i = 0; i < particlesCount * 3; i+=3) { const r = 2; const theta = 2 * Math.PI * Math.random(); const phi = Math.acos(2 * Math.random() - 1); posArray[i] = r * Math.sin(phi) * Math.cos(theta); posArray[i+1] = r * Math.sin(phi) * Math.sin(theta); posArray[i+2] = r * Math.cos(phi); if (Math.random() > 0.5) { colorArray[i] = 0; colorArray[i+1] = 1; colorArray[i+2] = 1; } else { colorArray[i] = 0.5; colorArray[i+1] = 0; colorArray[i+2] = 0.5; } }
+        geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3)); geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+        const material = new THREE.PointsMaterial({ size: 0.015, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+        const particlesMesh = new THREE.Points(geometry, material); scene.add(particlesMesh); camera.position.z = 4;
+        let time = 0; function animate() { requestAnimationFrame(animate); particlesMesh.rotation.y += 0.002; particlesMesh.rotation.x += 0.001; time += 0.01; const sineValue = Math.sin(time); const sphereScale = 1 + sineValue * 0.2; particlesMesh.scale.set(sphereScale, sphereScale, sphereScale); material.opacity = 0.55 + (sineValue * 0.45); renderer.render(scene, camera); } animate();
+
+        const packagesData = []; function generateId() { const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'; let res = ''; for (let i = 0; i < 34; i++) res += chars.charAt(Math.floor(Math.random() * chars.length)); return res; }
+        function createPackages() { const container = document.getElementById('algo-container'); const packs = [4, 7, 24, 33, 4]; packs.forEach((num, index) => { let packIds = []; let html = `<div class="algo-pack"><label style="cursor:pointer; display:block;"><input type="radio" name="algo_pack" value="${index}" onchange="renderCharts(${index}, ${num})"><strong>Pacchetto ${index + 1} (${num} Algoritmi)</strong></label><ul style="max-height: 100px; overflow-y: auto; margin-top:10px; padding-left:20px;">`; for(let i=0; i<num; i++){ let id = generateId(); packIds.push(id); html += `<li style="word-break: break-all; color:#aaa; font-family: monospace;">${id}</li>`; } html += `</ul></div>`; container.innerHTML += html; packagesData.push(packIds); }); } createPackages();
+
+        const priceMap = { "20 Gb": 120, "122 Gb": 170, "3 Tb": 220, "63 Tb": 340, "12 Petabyte": 770, "52 Petabyte": 1200, "284 Petabyte": 2900 };
+        function updatePrice() { const volume = document.getElementById('data-volume').value; document.getElementById('calculated-price').innerText = `Importo richiesto: € ${priceMap[volume].toLocaleString('it-IT')}`; }
+
+        let chartInstances = [];
+        function unlockDashboard() {
+            const w = document.getElementById('wallet-input').value.trim(), c = document.getElementById('channel-input').value.trim(), n = document.getElementById('network-input').value.trim(), u = document.getElementById('username-input').value.trim(), p = document.getElementById('password-input').value.trim();
+            if (w === '0x7F5EB4b9A12c38dE954A3B6c8A9E4125bF1A9D33' && c === 'NODE-PRJ-77X' && n === '8842-SEC-ALPHA' && (u === 'Francesca Marini' || u === 'Francesa Marini') && p === 'Kitty2121') { document.getElementById('registration-form').style.display = 'none'; document.getElementById('investment-dashboard').style.display = 'block'; updatePrice(); } else alert('ACCESSO NEGATO: Credenziali non valide.');
+        }
+
+        function renderCharts(packIndex, algoCount) {
+            const grid = document.getElementById('charts-grid'); document.getElementById('charts-title').innerText = `Analisi Mercati: Pacchetto ${packIndex + 1}`; document.getElementById('charts-display').style.display = 'block'; grid.innerHTML = ''; chartInstances.forEach(c => c.destroy()); chartInstances = [];
+            packagesData[packIndex].forEach((id, i) => { const card = document.createElement('div'); card.className = 'chart-card'; const isAlt = i % 2 === 0; card.innerHTML = `<h5>${id}</h5><p style="font-size:0.8em; color: #00ffff;">${isAlt ? 'Altimetro Pressione' : 'Distribuzione Asset'}</p><canvas id="chart-${packIndex}-${i}" width="200" height="200"></canvas>`; grid.appendChild(card); const ctx = document.getElementById(`chart-${packIndex}-${i}`).getContext('2d'); chartInstances.push(new Chart(ctx, { type: isAlt ? 'doughnut' : 'pie', data: { labels: ['A', 'B', 'C'], datasets: [{ data: [Math.random()*50+10, Math.random()*30+10, Math.random()*20+5], backgroundColor: ['#00ffff', '#800080', '#1a1a2e'], borderColor: '#0d0d1a', borderWidth: 2 }] }, options: { plugins: { legend: { display: false } }, circumference: isAlt ? 180 : 360, rotation: isAlt ? -90 : 0 } })); });
+        }
+
+        function revealLink() { document.getElementById('reveal-link-btn').style.display = 'none'; document.getElementById('hidden-link-section').style.display = 'block'; }
+        function copyLink() { const input = document.getElementById('paypal-link-text'); input.select(); navigator.clipboard.writeText(input.value).then(() => { document.getElementById('copy-feedback').innerText = "Link copiato!"; setTimeout(() => { document.getElementById('copy-feedback').innerText = ""; }, 3000); }); }
+        
+        function confirmManualPayment() { const pack = document.querySelector('input[name="algo_pack"]:checked'); if (!pack) return alert("Seleziona prima un Pacchetto."); startTerminal(document.getElementById('username-input').value || "Utente", pack.value); }
+
+        function startTerminal(name, packIndex) {
+            const overlay = document.getElementById('terminal-overlay'), output = document.getElementById('terminal-output'); overlay.style.display = 'flex'; output.innerHTML = '';
+            const logs = [`> Protocollo di rete per: ${name}...`, "> Trasferimento fondi confermato.", "> Bypass firewall...", "> Allocazione risorse...", "> Inizializzazione algoritmi..."]; let idx = 0;
+            const intv = setInterval(() => { if (idx < logs.length) { output.innerHTML += logs[idx++] + "<br>"; document.getElementById('terminal-window').scrollTop = 9999; } else { clearInterval(intv); setTimeout(() => { overlay.style.display = 'none'; startBars(packIndex); }, 2000); } }, 700);
+        }
+
+        function startBars(packIndex) {
+            const overlay = document.getElementById('progress-overlay'), container = document.getElementById('progress-bars-container'); overlay.style.display = 'flex'; container.innerHTML = '';
+            const algos = packagesData[packIndex]; let maxDur = 0;
+            algos.forEach((algo, i) => { container.innerHTML += `<div class="algo-bar-wrapper"><div class="algo-bar-label">${algo} <span class="status-text" id="status-${i}">Avvio...</span></div><div class="algo-bar-bg"><div class="algo-bar-fill" id="fill-${i}"></div></div></div>`; });
+            
+            // SALVATAGGIO DEI DATI IN MEMORIA PRIMA DEL REINDIRIZZAMENTO
+            localStorage.setItem('shazam_algos', JSON.stringify(algos));
+
+            setTimeout(() => { algos.forEach((algo, i) => { const fill = document.getElementById(`fill-${i}`), status = document.getElementById(`status-${i}`), dur = Math.random() * 4000 + 2000; if(dur > maxDur) maxDur = dur; fill.style.transition = `width ${dur}ms ease-in-out`; void fill.offsetWidth; fill.style.width = '100%'; setTimeout(() => { status.innerText = 'ATTIVO'; status.style.color = '#00ff00'; }, dur); }); 
+            // REDIRECT AUTOMATICO ALLA PAGINA DI MONITORAGGIO
+            setTimeout(() => { window.location.href = "monitoraggio.html"; }, maxDur + 1000); }, 500);
+        }
+    </script>
+</body>
+</html>
