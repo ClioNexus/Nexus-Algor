@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+    <script>
+        if (localStorage.getItem('shazam_locked') === 'true') {
+            window.location.replace("sala-attesa.html");
+        }
+    </script>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shazam Algor - Monitoraggio Traffico</title>
@@ -15,14 +21,20 @@
         .timer-title { color: #ff4444; font-weight: bold; font-size: 1.2em; margin-bottom: 5px; }
         .countdown { font-family: monospace; font-size: 2.5em; color: #ff0000; text-shadow: 0 0 10px #ff0000; }
         .warning-text { color: #ffaa00; font-size: 0.9em; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-family: monospace; }
+        
+        .table-container { max-height: 400px; overflow-y: auto; margin-bottom: 30px; border-bottom: 1px solid #2a2a4a; padding-right: 10px; }
+        .table-container::-webkit-scrollbar { width: 8px; }
+        .table-container::-webkit-scrollbar-thumb { background: #800080; border-radius: 4px; }
+        
+        table { width: 100%; border-collapse: collapse; font-family: monospace; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #2a2a4a; }
-        th { color: #00ffff; text-transform: uppercase; }
+        th { color: #00ffff; text-transform: uppercase; position: sticky; top: 0; background: rgba(13, 13, 26, 0.95); }
         tr:hover { background: rgba(0, 255, 255, 0.05); }
         .status-ok { color: #00ff00; }
         .status-error { color: #ff0000; font-weight: bold; animation: blinker 1.5s linear infinite; }
         .row-error { background: rgba(255, 0, 0, 0.15) !important; border-left: 4px solid #ff0000; }
         @keyframes blinker { 50% { opacity: 0.5; } }
+        
         .balance-section { text-align: center; padding: 25px; background: rgba(0, 255, 255, 0.05); border: 1px solid #00ffff; border-radius: 8px; margin-bottom: 20px; }
         .balance-title { color: #00ffff; font-size: 1.2em; letter-spacing: 2px; margin-bottom: 10px; }
         .balance-amount { font-size: 3.5em; color: #00ff00; text-shadow: 0 0 15px #00ff00; font-family: monospace; font-weight: bold; margin: 10px 0; }
@@ -40,15 +52,15 @@
             <div class="countdown" id="timer-display">22:00:00</div>
             <div class="warning-text">Rischio critico: In caso di mancato smaltimento del traffico dati, l'intero cluster verrà resettato.</div>
         </div>
-        <table>
-            <thead><tr><th>ID Algoritmo</th><th>Traffico Gestito</th><th>Stato Macinazione</th></tr></thead>
-            <tbody>
-                <tr><td>ALG-77X-ALPHA</td><td>842.5 GB</td><td class="status-ok">🟢 Completato (100%)</td></tr>
-                <tr><td>ALG-32B-OMEGA</td><td>610.2 GB</td><td class="status-ok">🟢 Completato (100%)</td></tr>
-                <tr class="row-error"><td>ALG-404-CRITICAL</td><td>12.4 GB / 1.2 TB</td><td class="status-error">🔴 BLOCCATO: Insufficienza Potenza</td></tr>
-                <tr><td>ALG-11A-SIGMA</td><td>In attesa...</td><td style="color: #aaa;">⚪ Standby (In attesa)</td></tr>
-            </tbody>
-        </table>
+        
+        <div class="table-container">
+            <table>
+                <thead><tr><th>ID Algoritmo</th><th>Traffico Gestito</th><th>Stato Macinazione</th></tr></thead>
+                <tbody id="algo-tbody">
+                    </tbody>
+            </table>
+        </div>
+
         <div class="balance-section">
             <div class="balance-title">Totale Generato</div>
             <div class="balance-amount" id="balance-display">€ 4.258,40</div>
@@ -56,6 +68,7 @@
         </div>
         <button class="action-btn" onclick="window.location.href='scelta-pacchetti.html'">Esegui Override di Emergenza</button>
     </div>
+    
     <script>
         const container = document.getElementById('canvas-bg'); const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); const renderer = new THREE.WebGLRenderer({ alpha: true }); renderer.setSize(window.innerWidth, window.innerHeight); container.appendChild(renderer.domElement);
         const geo = new THREE.BufferGeometry(); const count = 15000; const pos = new Float32Array(count * 3); const col = new Float32Array(count * 3);
@@ -65,6 +78,37 @@
 
         let tSec = 22*3600; setInterval(()=>{ let h = Math.floor(tSec/3600), m = Math.floor((tSec%3600)/60), s = tSec%60; document.getElementById('timer-display').innerText = `${h<10?'0'+h:h}:${m<10?'0'+m:m}:${s<10?'0'+s:s}`; if(tSec>0)tSec--; }, 1000);
         let bal = 4258.40; setInterval(()=>{ bal += parseFloat((Math.random()*0.15).toFixed(2)); document.getElementById('balance-display').innerText = `€ ${bal.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})}`; }, 3500);
+
+        const tbody = document.getElementById('algo-tbody');
+        let algos = JSON.parse(localStorage.getItem('shazam_algos'));
+        
+        if (!algos || algos.length === 0) {
+            algos = ["ALG-77X-ALPHA", "ALG-32B-OMEGA", "ALG-99Y-DELTA", "ALG-404-CRITICAL", "ALG-11A-SIGMA"];
+        }
+
+        let html = '';
+        let failIndex = algos.length > 4 ? 3 : algos.length - 2;
+        if (failIndex < 0) failIndex = 0;
+
+        algos.forEach((id, i) => {
+            if (i < failIndex) {
+                let gb = (Math.random() * 500 + 300).toFixed(1);
+                html += `<tr><td>${id}</td><td>${gb} GB</td><td class="status-ok">🟢 Completato (100%)</td></tr>`;
+            } else if (i === failIndex) {
+                html += `<tr class="row-error" id="critical-row">
+                            <td>${id}-CRITICAL</td>
+                            <td id="critical-traffic">12.4 GB / 1.2 TB</td>
+                            <td class="status-error" id="critical-status">🔴 BLOCCATO: Insufficienza Potenza</td>
+                        </tr>`;
+            } else {
+                html += `<tr>
+                            <td>${id}</td>
+                            <td>In attesa...</td>
+                            <td style="color: #aaa;">⚪ Standby (In attesa di sblocco)</td>
+                        </tr>`;
+            }
+        });
+        tbody.innerHTML = html;
     </script>
 </body>
 </html>
