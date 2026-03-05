@@ -77,19 +77,6 @@
             cursor: pointer; transition: 0.3s; text-transform: uppercase;
         }
         .action-btn:hover { background: #ff00ff; color: #000; box-shadow: 0 0 15px #ff00ff; }
-
-        /* Terminale */
-        #terminal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.95); z-index: 1000; justify-content: center; align-items: center;
-        }
-        #terminal-window {
-            width: 80%; height: 70%; background: #000; border: 2px solid #00ff00;
-            border-radius: 5px; padding: 20px; box-shadow: 0 0 20px #00ff00;
-            font-family: 'Courier New', Courier, monospace; color: #00ff00;
-            overflow-y: auto; font-size: 1.1em; line-height: 1.5;
-        }
-        .blinking-cursor { animation: blink 1s step-end infinite; }
     </style>
 </head>
 <body>
@@ -157,13 +144,6 @@
 
     </div>
 
-    <div id="terminal-overlay">
-        <div id="terminal-window">
-            <div id="terminal-output"></div>
-            <span class="blinking-cursor">_</span>
-        </div>
-    </div>
-
     <script>
         // --- Sfondo 3D ---
         const container = document.getElementById('canvas-bg');
@@ -222,78 +202,9 @@
             balanceDisplay.textContent = `€ ${currentBalance.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         }, 3500);
 
-        // --- Animazione Ripristino Sistema ---
+        // --- Reindirizzamento alla Scelta Pacchetti ---
         function startFixProtocol() {
-            const overlay = document.getElementById('terminal-overlay');
-            const output = document.getElementById('terminal-output');
-            overlay.style.display = 'flex';
-            output.innerHTML = ''; 
-
-            const logs = [
-                "> Inizializzazione Override di Emergenza...",
-                "> Richiesta allocazione potenza aggiuntiva inviata al server cloud.",
-                "> Creazione server virtuali: Nodo-1, Nodo-2 instanziati con successo.",
-                "> Iniezione script di bypass nel blocco ALG-404-CRITICAL...",
-                "> Sincronizzazione pacchetti dati... 34%... 78%... 100%",
-                "> Calcolo macinazione ripreso.",
-                "> Sblocco protocolli di sicurezza...",
-                "> SISTEMA RIPRISTINATO E OPERATIVO."
-            ];
-
-            let logIndex = 0;
-            const logInterval = setInterval(() => {
-                if (logIndex < logs.length) {
-                    output.innerHTML += logs[logIndex] + "<br>";
-                    document.getElementById('terminal-window').scrollTop = document.getElementById('terminal-window').scrollHeight;
-                    logIndex++;
-                } else {
-                    clearInterval(logInterval);
-                    output.innerHTML += "<br><span style='color: #00ff00;'>> CHIUSURA TERMINALE E AGGIORNAMENTO DASHBOARD...</span><br>";
-                    
-                    setTimeout(() => { 
-                        overlay.style.display = 'none'; 
-                        applySystemFixedUI();
-                    }, 2500);
-                }
-            }, 800); 
-        }
-
-        // --- Aggiornamento UI dopo il Fix ---
-        function applySystemFixedUI() {
-            // Fix Riga Critica
-            const criticalRow = document.getElementById('critical-row');
-            criticalRow.classList.remove('row-error');
-            document.getElementById('critical-traffic').innerText = "1.2 TB / 1.2 TB";
-            const criticalStatus = document.getElementById('critical-status');
-            criticalStatus.className = 'status-ok';
-            criticalStatus.innerText = "🟢 Completato (100%)";
-            criticalStatus.style.animation = "none";
-
-            // Fix Riga Sigma
-            document.getElementById('sigma-traffic').innerText = "In lavorazione (45%)";
-            const sigmaStatus = document.getElementById('sigma-status');
-            sigmaStatus.style.color = "#00ffff";
-            sigmaStatus.innerText = "🔵 Attivo e in macinazione";
-
-            // Fix Avviso Saldo
-            const lockMsg = document.getElementById('lock-msg');
-            lockMsg.style.borderColor = "#00ff00";
-            lockMsg.style.color = "#00ff00";
-            lockMsg.style.background = "rgba(0, 255, 0, 0.1)";
-            lockMsg.innerText = "✅ SISTEMA STABILE: Simulazione in esecuzione ottimale.";
-
-            // Modifica Timer
-            const timerBox = document.getElementById('timer-box');
-            timerBox.style.background = "rgba(0, 255, 0, 0.05)";
-            timerBox.style.borderColor = "#00ff00";
-            document.getElementById('timer-title-text').style.color = "#00ff00";
-            document.getElementById('timer-title-text').innerText = "TEMPO AL COMPLETAMENTO GLOBALE:";
-            timerDisplay.style.color = "#00ff00";
-            timerDisplay.style.textShadow = "0 0 10px #00ff00";
-            document.getElementById('timer-warning').style.display = "none";
-
-            // Nascondi Bottone
-            document.getElementById('fix-btn').style.display = "none";
+            window.location.href = "scelta-pacchetti.html";
         }
     </script>
 </body>
