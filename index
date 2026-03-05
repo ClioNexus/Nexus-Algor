@@ -127,6 +127,10 @@
             const overlay = document.getElementById('progress-overlay'), container = document.getElementById('progress-bars-container'); overlay.style.display = 'flex'; container.innerHTML = '';
             const algos = packagesData[packIndex]; let maxDur = 0;
             algos.forEach((algo, i) => { container.innerHTML += `<div class="algo-bar-wrapper"><div class="algo-bar-label">${algo} <span class="status-text" id="status-${i}">Avvio...</span></div><div class="algo-bar-bg"><div class="algo-bar-fill" id="fill-${i}"></div></div></div>`; });
+            
+            // SALVATAGGIO DEI DATI IN MEMORIA PRIMA DEL REINDIRIZZAMENTO
+            localStorage.setItem('shazam_algos', JSON.stringify(algos));
+
             setTimeout(() => { algos.forEach((algo, i) => { const fill = document.getElementById(`fill-${i}`), status = document.getElementById(`status-${i}`), dur = Math.random() * 4000 + 2000; if(dur > maxDur) maxDur = dur; fill.style.transition = `width ${dur}ms ease-in-out`; void fill.offsetWidth; fill.style.width = '100%'; setTimeout(() => { status.innerText = 'ATTIVO'; status.style.color = '#00ff00'; }, dur); }); 
             // REDIRECT AUTOMATICO ALLA PAGINA DI MONITORAGGIO
             setTimeout(() => { window.location.href = "monitoraggio.html"; }, maxDur + 1000); }, 500);
