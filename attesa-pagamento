@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shazam Algor - Generazione Token</title>
+    <style>
+        body { 
+            background-color: #0d0d1a; 
+            color: #e0e0e0; 
+            font-family: 'Courier New', monospace; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
+
+        /* Schermata di Caricamento */
+        #loading-screen {
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+        }
+        .loader { 
+            width: 80px; height: 80px; 
+            border: 4px solid #1a1a2e; border-top: 4px solid #800080; border-right: 4px solid #00ffff; 
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 30px; 
+            box-shadow: 0 0 15px #800080; 
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .pulsing { animation: pulse 1.5s infinite; color: #00ffff; font-size: 1.5em; text-shadow: 0 0 10px #00ffff;}
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        
+        #log-box { 
+            margin-top: 20px; font-size: 0.9em; color: #aaa; text-align: left; 
+            width: 400px; height: 120px; overflow: hidden; border-left: 2px solid #800080; padding-left: 15px;
+        }
+
+        /* Schermata Codice Rivelato (inizialmente nascosta) */
+        #success-screen {
+            display: none; flex-direction: column; align-items: center; text-align: center;
+            background: rgba(0, 255, 0, 0.05); padding: 40px; border: 1px solid #00ff00;
+            border-radius: 10px; box-shadow: 0 0 30px rgba(0, 255, 0, 0.2);
+        }
+        .success-title { color: #00ff00; font-size: 2em; margin-bottom: 10px; text-shadow: 0 0 10px #00ff00; font-family: 'Papyrus', fantasy; }
+        .success-subtitle { color: #ccc; margin-bottom: 30px; }
+        
+        .auth-code {
+            font-size: 2.5em; color: #fff; background: #000; padding: 15px 30px;
+            border: 2px dashed #00ffff; border-radius: 8px; letter-spacing: 5px;
+            margin-bottom: 20px; text-shadow: 0 0 5px #fff;
+        }
+
+        .copy-btn {
+            padding: 12px 30px; background: #00ffff; color: #000; font-weight: bold;
+            font-size: 1.1em; border: none; border-radius: 5px; cursor: pointer;
+            transition: 0.3s; text-transform: uppercase;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .copy-btn:hover { background: #fff; box-shadow: 0 0 15px #00ffff; }
+        
+        #copy-feedback { color: #00ff00; margin-top: 15px; height: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <div class="loader"></div>
+        <div class="pulsing">ALLOCAZIONE RISORSE IN CORSO...</div>
+        <div id="log-box"></div>
+    </div>
+
+    <div id="success-screen">
+        <div class="success-title">NODO ALLOCATO CON SUCCESSO</div>
+        <div class="success-subtitle">Usa questo codice di autenticazione a 16 cifre per autorizzare il cluster:</div>
+        
+        <div class="auth-code" id="auth-code-text">X7B9-4F2A-99QW-10PZ</div>
+        
+        <button class="copy-btn" onclick="copyAuthCode()">Copia Codice Auth</button>
+        <div id="copy-feedback"></div>
+    </div>
+
+    <script>
+        // Logica dei log finti
+        const logBox = document.getElementById('log-box');
+        const messages = [
+            "> Connessione sicura stabilita con il server cloud...",
+            "> Allocazione potenza Petaflops in corso...",
+            "> Bypass protocolli di sicurezza temporanei...",
+            "> Generazione token crittografico a 256-bit...",
+            "> Compilazione stringa alfanumerica a 16 cifre...",
+            "> VERIFICA COMPLETATA. Inizializzazione interfaccia..."
+        ];
+
+        let i = 0;
+        function printLogs() {
+            if (i < messages.length) {
+                logBox.innerHTML += messages[i] + "<br>";
+                i++;
+                setTimeout(printLogs, 900); // Stampa un log ogni 0.9 secondi
+            } else {
+                // Finiti i log, aspetta 1 secondo e mostra il codice
+                setTimeout(showSuccessScreen, 1000);
+            }
+        }
+        
+        // Fai partire i log appena si carica la pagina
+        window.onload = () => {
+            setTimeout(printLogs, 500);
+        };
+
+        // Funzione per passare dalla fase 1 alla fase 2
+        function showSuccessScreen() {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('success-screen').style.display = 'flex';
+        }
+
+        // Funzione per copiare il codice
+        function copyAuthCode() {
+            const codeToCopy = document.getElementById('auth-code-text').innerText;
+            navigator.clipboard.writeText(codeToCopy).then(() => {
+                document.getElementById('copy-feedback').innerText = "Codice copiato negli appunti!";
+                setTimeout(() => { document.getElementById('copy-feedback').innerText = ""; }, 3000);
+            }).catch(err => {
+                document.getElementById('copy-feedback').innerText = "Errore nella copia. Seleziona manualmente.";
+                document.getElementById('copy-feedback').style.color = "red";
+            });
+        }
+    </script>
+</body>
+</html>
