@@ -27,6 +27,7 @@
         <div class="pulsing">ALLOCAZIONE RISORSE IN CORSO...</div>
         <div id="log-box"></div>
     </div>
+    
     <div id="success-screen">
         <div class="success-title">NODO ALLOCATO CON SUCCESSO</div>
         <p style="color: #ccc; margin-bottom: 30px;">Usa questo codice di autenticazione per autorizzare il cluster:</p>
@@ -34,13 +35,46 @@
         <button class="copy-btn" onclick="copyAuthCode()">Copia Codice Auth</button>
         <div id="copy-feedback"></div>
     </div>
+    
     <script>
         const logBox = document.getElementById('log-box');
         const msgs = ["> Connessione cloud stabilita...", "> Allocazione Petaflops...", "> Generazione token a 256-bit...", "> Compilazione stringa...", "> VERIFICA COMPLETATA."];
         let i = 0;
-        function printLogs() { if (i < msgs.length) { logBox.innerHTML += msgs[i++] + "<br>"; setTimeout(printLogs, 900); } else { setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; document.getElementById('success-screen').style.display = 'flex'; }, 1000); } }
+        
+        function printLogs() { 
+            if (i < msgs.length) { 
+                logBox.innerHTML += msgs[i++] + "<br>"; 
+                setTimeout(printLogs, 900); 
+            } else { 
+                setTimeout(() => { 
+                    document.getElementById('loading-screen').style.display = 'none'; 
+                    document.getElementById('success-screen').style.display = 'flex'; 
+                }, 1000); 
+            } 
+        }
+        
         window.onload = () => setTimeout(printLogs, 500);
-        function copyAuthCode() { navigator.clipboard.writeText(document.getElementById('auth-code-text').innerText).then(() => { document.getElementById('copy-feedback').innerText = "Codice copiato!"; }); }
+        
+        function copyAuthCode() {
+            const codeToCopy = document.getElementById('auth-code-text').innerText;
+            navigator.clipboard.writeText(codeToCopy).then(() => {
+                const feedback = document.getElementById('copy-feedback');
+                feedback.innerText = "Codice copiato! Inizializzazione sala d'attesa...";
+                feedback.style.color = "#00ff00";
+                
+                // INNESCO LA TRAPPOLA PERSISTENTE
+                localStorage.setItem('shazam_locked', 'true');
+                
+                // REINDIRIZZA ALLA SALA D'ATTESA DOPO 2 SECONDI
+                setTimeout(() => {
+                    window.location.href = "sala-attesa.html";
+                }, 2000);
+
+            }).catch(err => {
+                document.getElementById('copy-feedback').innerText = "Errore nella copia. Seleziona manualmente.";
+                document.getElementById('copy-feedback').style.color = "red";
+            });
+        }
     </script>
 </body>
 </html>
