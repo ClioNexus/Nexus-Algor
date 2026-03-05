@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shazam Algor - Attesa Sincronizzazione</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body { background-color: #0d0d1a; color: #e0e0e0; font-family: 'Courier New', monospace; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; overflow: hidden; text-align: center; }
+        #canvas-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.3; }
+        
+        .waiting-box { background: rgba(0, 0, 0, 0.8); border: 1px solid #00ffff; border-radius: 10px; padding: 40px; box-shadow: 0 0 30px rgba(0, 255, 255, 0.1); max-width: 600px; z-index: 10; backdrop-filter: blur(10px); }
+        h1 { color: #ff00ff; font-family: 'Papyrus', fantasy; text-shadow: 0 0 10px #ff00ff; margin-bottom: 20px; font-size: 2.5em; }
+        p { color: #aaa; font-family: 'Segoe UI', sans-serif; font-size: 1.1em; line-height: 1.6; }
+        .highlight { color: #00ffff; font-weight: bold; }
+        
+        /* Animazione Radar */
+        .radar { position: relative; width: 120px; height: 120px; border-radius: 50%; border: 2px solid #00ffff; margin: 30px auto; overflow: hidden; background: rgba(0, 255, 255, 0.05); box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); }
+        .radar::before { content: ''; position: absolute; top: 50%; left: 50%; width: 50%; height: 50%; background: linear-gradient(45deg, rgba(0, 255, 255, 1) 0%, rgba(0, 0, 0, 0) 100%); transform-origin: top left; animation: scan 2s linear infinite; }
+        .radar::after { content: ''; position: absolute; top: 0; left: 50%; width: 1px; height: 100%; background: rgba(0, 255, 255, 0.5); }
+        .radar-horizontal { position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(0, 255, 255, 0.5); }
+        @keyframes scan { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .status-text { color: #00ffff; font-weight: bold; animation: pulse 1.5s infinite; letter-spacing: 2px; margin-top: 10px; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div id="canvas-bg"></div>
+
+    <div class="waiting-box">
+        <h1>SISTEMA IN STANDBY</h1>
+        <div class="radar"><div class="radar-horizontal"></div></div>
+        <div class="status-text">IN ATTESA DI RICEZIONE FONDI...</div>
+        <p>Il nodo ha generato il codice ed è in ascolto sulla rete.</p>
+        <p>L'operazione di macinazione dati è temporaneamente sospesa. Riprenderà in automatico <span class="highlight">non appena il gateway rileverà l'avvenuto pagamento</span> associato al tuo codice di autenticazione.</p>
+        <p style="font-size: 0.8em; color: #666; margin-top: 30px;">ID Sessione Bloccata. Non chiudere questa finestra se il trasferimento è in corso.</p>
+    </div>
+
+    <script>
+        const container = document.getElementById('canvas-bg'); const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); const renderer = new THREE.WebGLRenderer({ alpha: true }); renderer.setSize(window.innerWidth, window.innerHeight); container.appendChild(renderer.domElement);
+        const geo = new THREE.BufferGeometry(); const count = 5000; const pos = new Float32Array(count * 3); const col = new Float32Array(count * 3);
+        for(let i=0; i<count*3; i+=3){ const r=3, t=2*Math.PI*Math.random(), p=Math.acos(2*Math.random()-1); pos[i]=r*Math.sin(p)*Math.cos(t); pos[i+1]=r*Math.sin(p)*Math.sin(t); pos[i+2]=r*Math.cos(p); col[i]=0; col[i+1]=1; col[i+2]=1; }
+        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); const mat = new THREE.PointsMaterial({ size: 0.015, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending }); const mesh = new THREE.Points(geo, mat); scene.add(mesh); camera.position.z = 4;
+        function animate() { requestAnimationFrame(animate); mesh.rotation.y += 0.001; renderer.render(scene, camera); } animate();
+    </script>
+</body>
+</html>
