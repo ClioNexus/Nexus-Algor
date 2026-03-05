@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shazam Algor - Espansione Risorse</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #0d0d1a; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; text-align: center; }
+        h1 { font-family: 'Papyrus', fantasy; color: #00ffff; text-shadow: 0 0 10px #800080; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1100px; margin: 40px auto; }
+        .package-card { background: rgba(255, 255, 255, 0.05); border: 1px solid #800080; border-radius: 10px; padding: 20px; transition: 0.3s; }
+        .package-card:hover { border-color: #00ffff; box-shadow: 0 0 15px rgba(0, 255, 255, 0.2); }
+        .price { font-size: 2em; color: #00ff00; font-weight: bold; margin: 15px 0; }
+        .stats { font-family: monospace; color: #aaa; text-align: left; margin: 15px 0; }
+        .buy-btn { width: 100%; padding: 12px; background: #800080; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+        .buy-btn:hover { background: #00ffff; color: #000; }
+        canvas { max-width: 150px; margin: 0 auto; }
+    </style>
+</head>
+<body>
+    <h1>ESPANSIONE POTENZA DI CALCOLO</h1>
+    <p>Seleziona un'unità di calcolo aggiuntiva per smaltire il traffico dati residuo.</p>
+
+    <div class="grid">
+        <div class="package-card">
+            <h3>Standard Node Sync</h3>
+            <canvas id="chart1"></canvas>
+            <div class="price">€ 70,00</div>
+            <div class="stats">
+                > Algoritmi inclusi: 4<br>
+                > Potenza: 1.2 Petaflops<br>
+                > Smaltimento: 250 GB/ora
+            </div>
+            <button class="buy-btn" onclick="goToWait()">Acquista Unità</button>
+        </div>
+
+        <div class="package-card" style="border-color: #00ffff; background: rgba(0, 255, 255, 0.03);">
+            <div style="color: #00ffff; font-size: 0.7em; margin-bottom: 10px;">CONSIGLIATO</div>
+            <h3>Quantum Grid Cluster</h3>
+            <canvas id="chart2"></canvas>
+            <div class="price">€ 130,00</div>
+            <div class="stats">
+                > Algoritmi inclusi: 8<br>
+                > Potenza: 4.8 Petaflops<br>
+                > Smaltimento: 900 GB/ora
+            </div>
+            <button class="buy-btn" style="background: #00ffff; color: #000;" onclick="goToWait()">Acquista Unità</button>
+        </div>
+
+        <div class="package-card">
+            <h3>Hyper-Thread Master</h3>
+            <canvas id="chart3"></canvas>
+            <div class="price">€ 250,00</div>
+            <div class="stats">
+                > Algoritmi inclusi: 16<br>
+                > Potenza: 12.0 Petaflops<br>
+                > Smaltimento: 2.5 TB/ora
+            </div>
+            <button class="buy-btn" onclick="goToWait()">Acquista Unità</button>
+        </div>
+    </div>
+
+    <script>
+        function createChart(id, data, color) {
+            new Chart(document.getElementById(id), {
+                type: 'doughnut',
+                data: {
+                    datasets: [{ data: data, backgroundColor: [color, '#1a1a2e'], borderWidth: 0 }]
+                },
+                options: { cutout: '80%', plugins: { legend: { display: false } } }
+            });
+        }
+        createChart('chart1', [30, 70], '#800080');
+        createChart('chart2', [65, 35], '#00ffff');
+        createChart('chart3', [90, 10], '#ff00ff');
+
+        function goToWait() { window.location.href = "attesa-pagamento.html"; }
+    </script>
+</body>
+</html>
