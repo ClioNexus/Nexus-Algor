@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shazam Algor - Sistema Attivo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <style>
+        body {
+            background-color: #0d0d1a; 
+            color: #e0e0e0;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; /* Nasconde le barre di scorrimento per un effetto a tutto schermo */
+        }
+        
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; /* Posiziona il canvas dietro il testo */
+        }
+
+        #message-overlay {
+            position: absolute;
+            bottom: 15%; /* Posiziona il blocco di testo nella parte inferiore */
+            left: 0;
+            width: 100%;
+            z-index: 2; /* Posiziona il testo sopra il canvas */
+            text-align: center;
+            padding: 0 20px;
+            box-sizing: border-box;
+            pointer-events: none; /* Permette di cliccare/interagire con la sfera dietro, se necessario */
+        }
+
+        h1 {
+            font-family: 'Papyrus', fantasy;
+            font-size: 2.5em;
+            color: #ff00ff;
+            text-shadow: 0 0 15px #ff00ff;
+            margin: 0 0 10px 0;
+            letter-spacing: 2px;
+        }
+
+        .projection-code {
+            font-size: 1.5em;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .status-message {
+            font-size: 1.2em;
+            color: #ffffff;
+            opacity: 0.9;
+            letter-spacing: 1px;
+        }
+
+        /* Animazione di pulsazione per il codice di proiezione */
+        .pulse-text {
+            animation: pulseText 2s infinite;
+        }
+
+        @keyframes pulseText {
+            0% { opacity: 0.7; text-shadow: 0 0 5px #00ffff; }
+            50% { opacity: 1; text-shadow: 0 0 20px #00ffff; }
+            100% { opacity: 0.7; text-shadow: 0 0 5px #00ffff; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+
+    <div id="message-overlay">
+        <h1>SISTEMA INIZIALIZZATO CON SUCCESSO</h1>
+        <div class="projection-code pulse-text">Codice di Proiezione: NODE-PRJ-77X</div>
+        <div class="status-message">Gli algoritmi sono stati attivati e pronti al lancio.</div>
+    </div>
+
+    <script>
+        // --- Sfera di Particelle Three.js (Adattata a schermo intero) ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        // Imposta la telecamera per coprire l'intera finestra del browser
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        const geometry = new THREE.BufferGeometry();
+        const particlesCount = 20000; 
+        const posArray = new Float32Array(particlesCount * 3);
+        const colorArray = new Float32Array(particlesCount * 3);
+
+        for(let i = 0; i < particlesCount * 3; i+=3) {
+            const r = 2; 
+            const theta = 2 * Math.PI * Math.random(); 
+            const phi = Math.acos(2 * Math.random() - 1);
+            posArray[i] = r * Math.sin(phi) * Math.cos(theta); 
+            posArray[i+1] = r * Math.sin(phi) * Math.sin(theta); 
+            posArray[i+2] = r * Math.cos(phi);
+            
+            // Colori Cyan e Purple
+            if (Math.random() > 0.5) { 
+                colorArray[i] = 0; colorArray[i+1] = 1; colorArray[i+2] = 1; 
+            } else { 
+                colorArray[i] = 0.5; colorArray[i+1] = 0; colorArray[i+2] = 0.5; 
+            }
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+        
+        const material = new THREE.PointsMaterial({ 
+            size: 0.015, 
+            vertexColors: true, 
+            transparent: true, 
+            blending: THREE.AdditiveBlending, 
+            depthWrite: false 
+        });
+        
+        const particlesMesh = new THREE.Points(geometry, material);
+        scene.add(particlesMesh); 
+        camera.position.z = 4;
+
+        let time = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            particlesMesh.rotation.y += 0.002; 
+            particlesMesh.rotation.x += 0.001;
+            time += 0.01; 
+            
+            // Effetto respiro
+            const sineValue = Math.sin(time);
+            const sphereScale = 1 + sineValue * 0.2; 
+            particlesMesh.scale.set(sphereScale, sphereScale, sphereScale);
+            material.opacity = 0.55 + (sineValue * 0.45);
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Ricalcola le dimensioni se l'utente ridimensiona la finestra
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

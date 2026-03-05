@@ -3,155 +3,298 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shazam Algor - Sistema Attivo</title>
+    <title>Shazam Algor - Monitoraggio Traffico Dati</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
     <style>
         body {
             background-color: #0d0d1a; 
             color: #e0e0e0;
-            font-family: 'Courier New', Courier, monospace;
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; /* Nasconde le barre di scorrimento per un effetto a tutto schermo */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 20px; overflow-x: hidden;
         }
         
-        #canvas-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1; /* Posiziona il canvas dietro il testo */
+        #canvas-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.4;
         }
 
-        #message-overlay {
-            position: absolute;
-            bottom: 15%; /* Posiziona il blocco di testo nella parte inferiore */
-            left: 0;
-            width: 100%;
-            z-index: 2; /* Posiziona il testo sopra il canvas */
-            text-align: center;
-            padding: 0 20px;
-            box-sizing: border-box;
-            pointer-events: none; /* Permette di cliccare/interagire con la sfera dietro, se necessario */
-        }
-
+        header { text-align: center; margin-bottom: 20px; }
         h1 {
-            font-family: 'Papyrus', fantasy;
-            font-size: 2.5em;
-            color: #ff00ff;
-            text-shadow: 0 0 15px #ff00ff;
-            margin: 0 0 10px 0;
-            letter-spacing: 2px;
+            font-family: 'Papyrus', fantasy; font-size: 3em; color: #00ffff;
+            text-shadow: 2px 2px 8px #800080; margin: 0;
+        }
+        
+        .dashboard-container {
+            max-width: 1000px; margin: 0 auto;
+            background: rgba(13, 13, 26, 0.85);
+            border: 1px solid #800080; border-radius: 10px; padding: 30px;
+            box-shadow: 0 0 20px rgba(128, 0, 128, 0.3);
+            backdrop-filter: blur(5px);
         }
 
-        .projection-code {
-            font-size: 1.5em;
-            color: #00ffff;
-            text-shadow: 0 0 10px #00ffff;
-            font-weight: bold;
-            margin-bottom: 15px;
+        /* Timer */
+        .timer-section {
+            text-align: center; padding: 15px; margin-bottom: 30px;
+            background: rgba(255, 0, 0, 0.1); border: 1px dashed #ff0000; border-radius: 8px;
+            transition: 0.5s;
+        }
+        .timer-title { color: #ff4444; font-weight: bold; font-size: 1.2em; margin-bottom: 5px; }
+        .countdown { font-family: monospace; font-size: 2.5em; color: #ff0000; text-shadow: 0 0 10px #ff0000; }
+        .warning-text { color: #ffaa00; font-size: 0.9em; margin-top: 10px; }
+
+        /* Tabella */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-family: monospace; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #2a2a4a; }
+        th { color: #00ffff; font-size: 1.1em; text-transform: uppercase; }
+        tr:hover { background: rgba(0, 255, 255, 0.05); }
+        
+        .status-ok { color: #00ff00; }
+        .status-error { color: #ff0000; font-weight: bold; animation: blinker 1.5s linear infinite; }
+        .row-error { background: rgba(255, 0, 0, 0.15); border-left: 4px solid #ff0000; }
+
+        @keyframes blinker { 50% { opacity: 0.5; } }
+
+        /* Saldo */
+        .balance-section {
+            text-align: center; padding: 25px;
+            background: rgba(0, 255, 255, 0.05); border: 1px solid #00ffff;
+            border-radius: 8px; margin-bottom: 20px; transition: 0.5s;
+        }
+        .balance-title { color: #00ffff; font-size: 1.2em; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
+        .balance-amount { font-size: 3.5em; color: #00ff00; text-shadow: 0 0 15px #00ff00; font-family: monospace; font-weight: bold; margin: 10px 0; }
+        
+        .lock-warning {
+            color: #ff4444; font-size: 1em; margin-top: 15px; padding: 10px;
+            border: 1px solid #ff4444; display: inline-block; border-radius: 5px;
+            background: rgba(255,0,0,0.1);
         }
 
-        .status-message {
-            font-size: 1.2em;
-            color: #ffffff;
-            opacity: 0.9;
-            letter-spacing: 1px;
+        /* Pulsante */
+        .action-btn {
+            display: block; width: 100%; max-width: 400px; margin: 0 auto;
+            padding: 15px; background: #800080; color: white; font-weight: bold;
+            font-size: 1.1em; border: 1px solid #ff00ff; border-radius: 5px;
+            cursor: pointer; transition: 0.3s; text-transform: uppercase;
         }
+        .action-btn:hover { background: #ff00ff; color: #000; box-shadow: 0 0 15px #ff00ff; }
 
-        /* Animazione di pulsazione per il codice di proiezione */
-        .pulse-text {
-            animation: pulseText 2s infinite;
+        /* Terminale */
+        #terminal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95); z-index: 1000; justify-content: center; align-items: center;
         }
-
-        @keyframes pulseText {
-            0% { opacity: 0.7; text-shadow: 0 0 5px #00ffff; }
-            50% { opacity: 1; text-shadow: 0 0 20px #00ffff; }
-            100% { opacity: 0.7; text-shadow: 0 0 5px #00ffff; }
+        #terminal-window {
+            width: 80%; height: 70%; background: #000; border: 2px solid #00ff00;
+            border-radius: 5px; padding: 20px; box-shadow: 0 0 20px #00ff00;
+            font-family: 'Courier New', Courier, monospace; color: #00ff00;
+            overflow-y: auto; font-size: 1.1em; line-height: 1.5;
         }
+        .blinking-cursor { animation: blink 1s step-end infinite; }
     </style>
 </head>
 <body>
 
-    <div id="canvas-container"></div>
+    <div id="canvas-bg"></div>
 
-    <div id="message-overlay">
-        <h1>SISTEMA INIZIALIZZATO CON SUCCESSO</h1>
-        <div class="projection-code pulse-text">Codice di Proiezione: NODE-PRJ-77X</div>
-        <div class="status-message">Gli algoritmi sono stati attivati e pronti al lancio.</div>
+    <header>
+        <h1>Shazam Algor</h1>
+    </header>
+
+    <div class="dashboard-container">
+        
+        <div class="timer-section" id="timer-box">
+            <div class="timer-title" id="timer-title-text">TEMPO LIMITE COMPLETAMENTO TASK:</div>
+            <div class="countdown" id="timer-display">22:00:00</div>
+            <div class="warning-text" id="timer-warning">Rischio critico: In caso di mancato smaltimento del traffico dati, l'intero cluster verrà resettato.</div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID Algoritmo</th>
+                    <th>Traffico Gestito</th>
+                    <th>Stato Macinazione</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>ALG-77X-ALPHA</td>
+                    <td>842.5 GB</td>
+                    <td class="status-ok">🟢 Completato (100%)</td>
+                </tr>
+                <tr>
+                    <td>ALG-32B-OMEGA</td>
+                    <td>610.2 GB</td>
+                    <td class="status-ok">🟢 Completato (100%)</td>
+                </tr>
+                <tr>
+                    <td>ALG-99Y-DELTA</td>
+                    <td>405.8 GB</td>
+                    <td class="status-ok">🟢 Completato (100%)</td>
+                </tr>
+                <tr class="row-error" id="critical-row">
+                    <td>ALG-404-CRITICAL</td>
+                    <td id="critical-traffic">12.4 GB / 1.2 TB</td>
+                    <td class="status-error" id="critical-status">🔴 BLOCCATO: Insufficienza Potenza di Calcolo</td>
+                </tr>
+                <tr>
+                    <td>ALG-11A-SIGMA</td>
+                    <td id="sigma-traffic">In attesa...</td>
+                    <td style="color: #aaa;" id="sigma-status">⚪ Standby (In attesa di sblocco)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="balance-section">
+            <div class="balance-title">Totale Generato (Simulazione)</div>
+            <div class="balance-amount" id="balance-display">€ 4.258,40</div>
+            <div class="lock-warning" id="lock-msg">
+                ⚠️ ANOMALIA DI SISTEMA: Risolvere il blocco di calcolo per completare la simulazione.
+            </div>
+        </div>
+
+        <button class="action-btn" id="fix-btn" onclick="startFixProtocol()">Esegui Override di Emergenza</button>
+
+    </div>
+
+    <div id="terminal-overlay">
+        <div id="terminal-window">
+            <div id="terminal-output"></div>
+            <span class="blinking-cursor">_</span>
+        </div>
     </div>
 
     <script>
-        // --- Sfera di Particelle Three.js (Adattata a schermo intero) ---
-        const container = document.getElementById('canvas-container');
+        // --- Sfondo 3D ---
+        const container = document.getElementById('canvas-bg');
         const scene = new THREE.Scene();
-        // Imposta la telecamera per coprire l'intera finestra del browser
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         container.appendChild(renderer.domElement);
 
         const geometry = new THREE.BufferGeometry();
-        const particlesCount = 20000; 
+        const particlesCount = 15000; 
         const posArray = new Float32Array(particlesCount * 3);
         const colorArray = new Float32Array(particlesCount * 3);
 
         for(let i = 0; i < particlesCount * 3; i+=3) {
-            const r = 2; 
-            const theta = 2 * Math.PI * Math.random(); 
-            const phi = Math.acos(2 * Math.random() - 1);
-            posArray[i] = r * Math.sin(phi) * Math.cos(theta); 
-            posArray[i+1] = r * Math.sin(phi) * Math.sin(theta); 
-            posArray[i+2] = r * Math.cos(phi);
-            
-            // Colori Cyan e Purple
-            if (Math.random() > 0.5) { 
-                colorArray[i] = 0; colorArray[i+1] = 1; colorArray[i+2] = 1; 
-            } else { 
-                colorArray[i] = 0.5; colorArray[i+1] = 0; colorArray[i+2] = 0.5; 
-            }
+            const r = 3; const theta = 2 * Math.PI * Math.random(); const phi = Math.acos(2 * Math.random() - 1);
+            posArray[i] = r * Math.sin(phi) * Math.cos(theta); posArray[i+1] = r * Math.sin(phi) * Math.sin(theta); posArray[i+2] = r * Math.cos(phi);
+            if (Math.random() > 0.5) { colorArray[i] = 0; colorArray[i+1] = 1; colorArray[i+2] = 1; } 
+            else { colorArray[i] = 0.5; colorArray[i+1] = 0; colorArray[i+2] = 0.5; }
         }
 
         geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
         geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
-        
-        const material = new THREE.PointsMaterial({ 
-            size: 0.015, 
-            vertexColors: true, 
-            transparent: true, 
-            blending: THREE.AdditiveBlending, 
-            depthWrite: false 
-        });
-        
+        const material = new THREE.PointsMaterial({ size: 0.015, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
         const particlesMesh = new THREE.Points(geometry, material);
-        scene.add(particlesMesh); 
-        camera.position.z = 4;
+        scene.add(particlesMesh); camera.position.z = 4;
 
         let time = 0;
         function animate() {
             requestAnimationFrame(animate);
-            particlesMesh.rotation.y += 0.002; 
-            particlesMesh.rotation.x += 0.001;
-            time += 0.01; 
-            
-            // Effetto respiro
-            const sineValue = Math.sin(time);
-            const sphereScale = 1 + sineValue * 0.2; 
-            particlesMesh.scale.set(sphereScale, sphereScale, sphereScale);
-            material.opacity = 0.55 + (sineValue * 0.45);
-
+            particlesMesh.rotation.y += 0.001; particlesMesh.rotation.x += 0.0005;
+            time += 0.01; particlesMesh.scale.set(1 + Math.sin(time)*0.1, 1 + Math.sin(time)*0.1, 1 + Math.sin(time)*0.1);
             renderer.render(scene, camera);
         }
         animate();
 
-        // Ricalcola le dimensioni se l'utente ridimensiona la finestra
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+        // --- Logica Timer e Saldo ---
+        let totalSeconds = 22 * 60 * 60; 
+        const timerDisplay = document.getElementById('timer-display');
+        let timerInterval;
+
+        function updateTimer() {
+            let hours = Math.floor(totalSeconds / 3600);
+            let minutes = Math.floor((totalSeconds % 3600) / 60);
+            let seconds = totalSeconds % 60;
+            timerDisplay.textContent = `${hours < 10 ? "0"+hours : hours}:${minutes < 10 ? "0"+minutes : minutes}:${seconds < 10 ? "0"+seconds : seconds}`;
+            if (totalSeconds > 0) totalSeconds--;
+        }
+        timerInterval = setInterval(updateTimer, 1000);
+        updateTimer();
+
+        let currentBalance = 4258.40;
+        const balanceDisplay = document.getElementById('balance-display');
+        setInterval(() => {
+            currentBalance += parseFloat((Math.random() * 0.15).toFixed(2));
+            balanceDisplay.textContent = `€ ${currentBalance.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }, 3500);
+
+        // --- Animazione Ripristino Sistema ---
+        function startFixProtocol() {
+            const overlay = document.getElementById('terminal-overlay');
+            const output = document.getElementById('terminal-output');
+            overlay.style.display = 'flex';
+            output.innerHTML = ''; 
+
+            const logs = [
+                "> Inizializzazione Override di Emergenza...",
+                "> Richiesta allocazione potenza aggiuntiva inviata al server cloud.",
+                "> Creazione server virtuali: Nodo-1, Nodo-2 instanziati con successo.",
+                "> Iniezione script di bypass nel blocco ALG-404-CRITICAL...",
+                "> Sincronizzazione pacchetti dati... 34%... 78%... 100%",
+                "> Calcolo macinazione ripreso.",
+                "> Sblocco protocolli di sicurezza...",
+                "> SISTEMA RIPRISTINATO E OPERATIVO."
+            ];
+
+            let logIndex = 0;
+            const logInterval = setInterval(() => {
+                if (logIndex < logs.length) {
+                    output.innerHTML += logs[logIndex] + "<br>";
+                    document.getElementById('terminal-window').scrollTop = document.getElementById('terminal-window').scrollHeight;
+                    logIndex++;
+                } else {
+                    clearInterval(logInterval);
+                    output.innerHTML += "<br><span style='color: #00ff00;'>> CHIUSURA TERMINALE E AGGIORNAMENTO DASHBOARD...</span><br>";
+                    
+                    setTimeout(() => { 
+                        overlay.style.display = 'none'; 
+                        applySystemFixedUI();
+                    }, 2500);
+                }
+            }, 800); 
+        }
+
+        // --- Aggiornamento UI dopo il Fix ---
+        function applySystemFixedUI() {
+            // Fix Riga Critica
+            const criticalRow = document.getElementById('critical-row');
+            criticalRow.classList.remove('row-error');
+            document.getElementById('critical-traffic').innerText = "1.2 TB / 1.2 TB";
+            const criticalStatus = document.getElementById('critical-status');
+            criticalStatus.className = 'status-ok';
+            criticalStatus.innerText = "🟢 Completato (100%)";
+            criticalStatus.style.animation = "none";
+
+            // Fix Riga Sigma
+            document.getElementById('sigma-traffic').innerText = "In lavorazione (45%)";
+            const sigmaStatus = document.getElementById('sigma-status');
+            sigmaStatus.style.color = "#00ffff";
+            sigmaStatus.innerText = "🔵 Attivo e in macinazione";
+
+            // Fix Avviso Saldo
+            const lockMsg = document.getElementById('lock-msg');
+            lockMsg.style.borderColor = "#00ff00";
+            lockMsg.style.color = "#00ff00";
+            lockMsg.style.background = "rgba(0, 255, 0, 0.1)";
+            lockMsg.innerText = "✅ SISTEMA STABILE: Simulazione in esecuzione ottimale.";
+
+            // Modifica Timer
+            const timerBox = document.getElementById('timer-box');
+            timerBox.style.background = "rgba(0, 255, 0, 0.05)";
+            timerBox.style.borderColor = "#00ff00";
+            document.getElementById('timer-title-text').style.color = "#00ff00";
+            document.getElementById('timer-title-text').innerText = "TEMPO AL COMPLETAMENTO GLOBALE:";
+            timerDisplay.style.color = "#00ff00";
+            timerDisplay.style.textShadow = "0 0 10px #00ff00";
+            document.getElementById('timer-warning').style.display = "none";
+
+            // Nascondi Bottone
+            document.getElementById('fix-btn').style.display = "none";
+        }
     </script>
 </body>
 </html>
